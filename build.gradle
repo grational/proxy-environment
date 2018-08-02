@@ -59,9 +59,9 @@ dependencies {
 	// Slf4j dependencies
 	implementation "org.slf4j:slf4j-api:$slf4jVersion"
 
-
 	// We use the awesome Spock testing and specification framework
 	testImplementation "org.spockframework:spock-core:$spockVersion"
+	testImplementation 'com.github.grational:specification-support:release-0.1.0'
 }
 
 // codenarc groovy source analyses
