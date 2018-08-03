@@ -9,34 +9,32 @@ import java.net.Proxy.Type
  */
 class EnvProxy {
 
-	private final Protocol protocol
-	private final String   envVar
+	private final String proxyString
 
-	EnvProxy(Protocol sp) {
-		this.protocol = sp
-		this.envVar   = System.getenv().get(sp.envVar())
+	EnvProxy(String ps) {
+		this.proxyString = ps
 	}
 
 	Proxy.Type type() {
 		def type
-		if ( this.envVar == null )
+		if ( this.proxyString == null )
 			type = Proxy.Type.DIRECT
-		else if ( this.envVar ==~ 'http://[^:]+:[1-9][0-9]{0,4}' )
+		else if ( this.proxyString ==~ 'http://[^:]+:[1-9][0-9]{0,4}' )
 			type = Proxy.Type.HTTP
-		else if ( this.envVar ==~ 'socks[45]://[^:]+:[1-9][0-9]{0,4}' )
+		else if ( this.proxyString ==~ 'socks[45]://[^:]+:[1-9][0-9]{0,4}' )
 			type = Proxy.Type.SOCKS
 		else
-			throw new UnsupportedOperationException("Invalid proxy type '${this.envVar}'")
+			throw new UnsupportedOperationException("Invalid proxy type '${this.proxyString}'")
 	}
 
 	String host() {
 		def host
 		switch( this.type() ) {
 			case Proxy.Type.HTTP:
-				host = this.envVar.find($/(?<=^http://)[^:]+/$)
+				host = this.proxyString.find($/(?<=^http://)[^:]+/$)
 				break
 			case Proxy.Type.SOCKS:
-				host = this.envVar.find($/(?<=^socks[45]://)[^:]+/$)
+				host = this.proxyString.find($/(?<=^socks[45]://)[^:]+/$)
 				break
 			case Proxy.Type.DIRECT:
 				throw new UnsupportedOperationException('Cannot return a host with Proxy.Type.DIRECT')
@@ -48,6 +46,6 @@ class EnvProxy {
 		if ( this.type() == Proxy.Type.DIRECT )
 			throw new UnsupportedOperationException('Cannot return a port with Proxy.Type.DIRECT')
 
-		return this.envVar.find($/(?<=:)[1-9][0-9]{0,4}/$) as Integer
+		return this.proxyString.find($/(?<=:)[1-9][0-9]{0,4}/$) as Integer
 	}
 }
