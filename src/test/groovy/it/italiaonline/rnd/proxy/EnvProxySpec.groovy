@@ -10,60 +10,120 @@ import it.italiaonline.rnd.specification.Environment
  */
 class EnvProxySpec extends Specification {
 
-	def "Should raise an exception if a host is requested with a Proxy.Type.DIRECT"() {
-		setup:
-			def envProxy = new EnvProxy(RequestProtocol.FTP.proxy()) // no ftp_proxy set
-		expect:
-			envProxy.type() == Proxy.Type.DIRECT
-		when:
-			envProxy.host()
-		then:
-			def exception = thrown(UnsupportedOperationException)
-			exception.message == 'Cannot return a host with Proxy.Type.DIRECT'
-		when:
-			envProxy.port()
-		then:
-			exception = thrown(UnsupportedOperationException)
-			exception.message == 'Cannot return a port with Proxy.Type.DIRECT'
-	}
-
-	def "Should raise an exception if the environment variable contains an invalid proxy"() {
+	@Unroll
+	def "Should raise an exception if the environment variable contains an invalid proxy: #all_proxy"() {
 		setup:
 			new Environment (
 				all_proxy: all_proxy
 			).insert()
 		when:
-			new EnvProxy(RequestProtocol.ALL.proxy()).type()
+			new EnvProxy(RequestProtocol.ALL.proxy())
 		then:
 			def exception = thrown(UnsupportedOperationException)
-			exception.message == "Invalid proxy type '${all_proxy}'"
+			exception.message == "Invalid proxy string '${all_proxy}'"
 		where:
 			all_proxy << [ 'https://proxy-dmz.pgol.net', 'proxy-dmz.pgol.net', '123stella', '_', '   ', '' ]
 	}
 
+	def "Should raise an exception if a proxy detail method is called with Proxy.Type.DIRECT"() {
+		setup: 'unset the ftp_proxy environment variable'
+			new Environment(ftp_proxy: '').clean()
+		and:
+			def envProxy = new EnvProxy(RequestProtocol.FTP.proxy())
+		expect:
+			envProxy.type() == Proxy.Type.DIRECT
+
+		when:
+			envProxy.host()
+		then:
+			def exception = thrown(UnsupportedOperationException)
+			exception.message == 'Cannot return the proxy host with a direct connection'
+
+		when:
+			envProxy.port()
+		then:
+			exception = thrown(UnsupportedOperationException)
+			exception.message == 'Cannot return the proxy port with a direct connection'
+
+		when:
+			envProxy.secure()
+		then:
+			exception = thrown(UnsupportedOperationException)
+			exception.message == 'Cannot return the proxy secure flag with a direct connection'
+
+		when:
+			envProxy.auth()
+		then:
+			exception = thrown(UnsupportedOperationException)
+			exception.message == 'Cannot return the proxy auth flag with a direct connection'
+
+		when:
+			envProxy.username()
+		then:
+			exception = thrown(UnsupportedOperationException)
+			exception.message == 'Cannot return the proxy username with a direct connection'
+
+		when:
+			envProxy.password()
+		then:
+			exception = thrown(UnsupportedOperationException)
+			exception.message == 'Cannot return the proxy password with a direct connection'
+
+	}
+
 	@Unroll
-	def "Should correctly read the proxy for the request protocol #requestProtocol"() {
+	def "Should correctly acquire the proxy details for the request protocol #requestProtocol"() {
 		setup:
 			new Environment (
-				all_proxy:   'http://proxy-all.pgol.net:1010',
+				all_proxy:   'https://proxy-all.pgol.net:1010',
 				ftp_proxy:   'socks4://proxy-ftp.pgol.net:2020',
 				http_proxy:  'http://proxy-http.pgol.net:3030',
 				https_proxy: 'socks5://proxy-https.pgol.net:4040',
-				rsync_proxy: 'http://proxy-rsync.pgol.net:5050'
+				rsync_proxy: 'https://proxy-rsync.pgol.net:5050'
 			).insert()
 		when:
 			def envProxy = new EnvProxy(requestProtocol.proxy())
 		then:
-			envProxy.type() == expectedType
-			envProxy.host() == expectedHost
-			envProxy.port() == expectedPort
+			envProxy.type()   == expectedType
+			envProxy.host()   == expectedHost
+			envProxy.port()   == expectedPort
+			envProxy.secure() == expectedSecureFlag
+			envProxy.auth()   == expectedAuthFlag
 		where:
-			requestProtocol       || expectedType     | expectedHost           | expectedPort
-			RequestProtocol.ALL   || Proxy.Type.HTTP  | 'proxy-all.pgol.net'   | 1010
-			RequestProtocol.FTP   || Proxy.Type.SOCKS | 'proxy-ftp.pgol.net'   | 2020
-			RequestProtocol.HTTP  || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030
-			RequestProtocol.HTTPS || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040
-			RequestProtocol.RSYNC || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050
+			requestProtocol       || expectedType     | expectedHost           | expectedPort | expectedSecureFlag | expectedAuthFlag
+			RequestProtocol.ALL   || Proxy.Type.HTTP  | 'proxy-all.pgol.net'   | 1010         | true               | false
+			RequestProtocol.FTP   || Proxy.Type.SOCKS | 'proxy-ftp.pgol.net'   | 2020         | false              | false
+			RequestProtocol.HTTP  || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030         | false              | false
+			RequestProtocol.HTTPS || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | false
+			RequestProtocol.RSYNC || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | false
 	}
 
+	@Unroll
+	def "Should correctly handle an authenticated proxy for the request protocol #requestProtocol"() {
+		setup:
+			new Environment (
+				all_proxy:   'https://user_all:pass_all@proxy-all.pgol.net:1010',
+				ftp_proxy:   'socks4://user_ftp:pass_ftp@proxy-ftp.pgol.net:2020',
+				http_proxy:  'http://user_http:pass_http@proxy-http.pgol.net:3030',
+				https_proxy: 'socks5://user_https:pass_https@proxy-https.pgol.net:4040',
+				rsync_proxy: 'https://user_rsync:pass_rsync@proxy-rsync.pgol.net:5050'
+			).insert()
+		when:
+			def envProxy = new EnvProxy(requestProtocol.proxy())
+		then:
+			envProxy.type()     == expectedType
+			envProxy.host()     == expectedHost
+			envProxy.port()     == expectedPort
+			envProxy.secure()   == expectedSecureFlag
+			envProxy.auth()     == expectedAuthFlag
+			envProxy.username() == expectedUsername
+			envProxy.password() == expectedPassword
+		where:
+			requestProtocol       || expectedType     | expectedHost           | expectedPort | expectedSecureFlag | expectedAuthFlag | expectedUsername | expectedPassword
+			RequestProtocol.ALL   || Proxy.Type.HTTP  | 'proxy-all.pgol.net'   | 1010         | true               | true             | 'user_all'       | 'pass_all'
+			RequestProtocol.FTP   || Proxy.Type.SOCKS | 'proxy-ftp.pgol.net'   | 2020         | false              | true             | 'user_ftp'       | 'pass_ftp'
+			RequestProtocol.HTTP  || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030         | false              | true             | 'user_http'      | 'pass_http'
+			RequestProtocol.HTTPS || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | true             | 'user_https'     | 'pass_https'
+			RequestProtocol.RSYNC || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | true             | 'user_rsync'     | 'pass_rsync'
+	}
 }
