@@ -20,6 +20,8 @@ plugins {
 	id 'net.saliman.cobertura' version '2.5.4'
 	// awesome git tag / gradle version integration
 	id 'pl.allegro.tech.build.axion-release' version '1.9.2'
+	// to upload the artifact on a nexus server
+	id 'maven'
 }
 
 // [general] configuration
@@ -35,7 +37,7 @@ project.ext {
 
 project.with {
 	//project.name is set in the settings.gradle with rootProject.name
-	group                 "it.italiaonline.rnd.proxy"
+	group                 "it.italiaonline.rnd"
 	version               scmVersion.version // (remove -SNAPSHOT for releases)
 	description           "A 'gigawatt' powered project."
 }
@@ -54,14 +56,15 @@ repositories {
 
 dependencies {
 	// Groovy language support
-	implementation "org.codehaus.groovy:groovy-all:$groovyVersion"
-
-	// Slf4j dependencies
-	implementation "org.slf4j:slf4j-api:$slf4jVersion"
+	implementation (
+		"org.codehaus.groovy:groovy:$groovyVersion",
+	)
 
 	// We use the awesome Spock testing and specification framework
-	testImplementation "org.spockframework:spock-core:$spockVersion"
-	testImplementation 'com.github.grational:specification-support:release-0.1.0'
+	testImplementation (
+		"org.spockframework:spock-core:$spockVersion",
+		'com.github.grational:specification-support:release-0.1.0'
+	)
 }
 
 // codenarc groovy source analyses
@@ -127,4 +130,26 @@ task funTest(type: Test) {
 gradle.startParameter.excludedTaskNames += "uniTest"
 gradle.startParameter.excludedTaskNames += "intTest"
 gradle.startParameter.excludedTaskNames += "funTest"
+
+
+// [maven] upload to http nexus configuration
+configurations {
+	deployerJars
+}
+dependencies {
+	// needed to deploy on nexus via http
+	deployerJars "org.apache.maven.wagon:wagon-http:2.+"
+}
+uploadArchives {
+	repositories.mavenDeployer {
+		configuration = configurations.deployerJars
+		repository(url: "${nexusUrl}/content/repositories/releases") {
+			authentication(userName: nexusUsername, password: nexusPassword)
+		}
+		snapshotRepository(url: "${nexusUrl}/content/repositories/snapshots") {
+			authentication(userName: nexusUsername, password: nexusPassword)
+		}
+	}
+}
+
 // vim: ft=groovy:fdm=indent
