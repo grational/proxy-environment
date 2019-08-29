@@ -20,8 +20,6 @@ plugins {
 	id 'net.saliman.cobertura' version '2.5.4'
 	// awesome git tag / gradle version integration
 	id 'pl.allegro.tech.build.axion-release' version '1.9.2'
-	// to upload the artifact on a nexus server
-	id 'maven'
 }
 
 // [general] configuration
@@ -130,26 +128,3 @@ task funTest(type: Test) {
 gradle.startParameter.excludedTaskNames += "uniTest"
 gradle.startParameter.excludedTaskNames += "intTest"
 gradle.startParameter.excludedTaskNames += "funTest"
-
-
-// [maven] upload to http nexus configuration
-configurations {
-	deployerJars
-}
-dependencies {
-	// needed to deploy on nexus via http
-	deployerJars "org.apache.maven.wagon:wagon-http:2.+"
-}
-uploadArchives {
-	repositories.mavenDeployer {
-		configuration = configurations.deployerJars
-		repository(url: "${nexusUrl}/content/repositories/releases") {
-			authentication(userName: nexusUsername, password: nexusPassword)
-		}
-		snapshotRepository(url: "${nexusUrl}/content/repositories/snapshots") {
-			authentication(userName: nexusUsername, password: nexusPassword)
-		}
-	}
-}
-
-// vim: ft=groovy:fdm=indent
