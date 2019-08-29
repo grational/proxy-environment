@@ -17,15 +17,15 @@ plugins {
 	// groovy code linter
 	id 'codenarc'
 	// test code coverage plugin
-	id 'net.saliman.cobertura' version '2.5.4'
+	id 'net.saliman.cobertura' version '2.6.1'
 	// awesome git tag / gradle version integration
-	id 'pl.allegro.tech.build.axion-release' version '1.9.2'
+	id 'pl.allegro.tech.build.axion-release' version '1.10.2'
 }
 
 // [general] configuration
 project.ext {
 	groovyVersion       = '2.5.1'
-	gradleVersion       = '4.9'
+	gradleVersion       = '5.6.1'
 	spockVersion        = '1.1-groovy-2.4'
 	codenarcVersion     = '1.2'
 	slf4jVersion        = '1.7.25'
