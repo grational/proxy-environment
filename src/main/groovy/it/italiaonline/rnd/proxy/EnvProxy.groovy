@@ -1,6 +1,6 @@
 package it.italiaonline.rnd.proxy
 
-import java.net.Proxy.Type
+import java.net.Proxy
 import java.util.regex.Pattern
 import java.util.regex.Matcher
 
@@ -9,7 +9,7 @@ import java.util.regex.Matcher
  * @author d7392
  * @date 01-08-2018 12.55
  */
-class EnvProxy {
+class EnvProxy implements StructuredProxy {
 	private final String  proxyPattern =
 		$/(https?|socks[45])://(?:([^:]+):([^@]+)@)?([^:]+):([1-9][0-9]{0,4})/$
 	private final Boolean direct
@@ -34,6 +34,7 @@ class EnvProxy {
 		}
 	}
 
+	@Override
 	Proxy.Type type() {
 		def type
 		if ( this.direct )
@@ -44,30 +45,35 @@ class EnvProxy {
 			type = Proxy.Type.SOCKS
 	}
 
+	@Override
 	String host() {
 		if ( this.direct )
 			throw new UnsupportedOperationException('Cannot return the proxy host with a direct connection')
 		return this.host
 	}
 
+	@Override
 	Integer port() {
 		if ( this.direct )
 			throw new UnsupportedOperationException('Cannot return the proxy port with a direct connection')
 		return this.port
 	}
 
+	@Override
 	Boolean secure() {
 		if ( this.direct )
 			throw new UnsupportedOperationException('Cannot return the proxy secure flag with a direct connection')
 		return ( this.protocol == 'https' )
 	}
 
+	@Override
 	Boolean auth() {
 		if ( this.direct )
 			throw new UnsupportedOperationException('Cannot return the proxy auth flag with a direct connection')
 		return ( this.username && this.password )
 	}
 
+	@Override
 	String username() {
 		if ( this.direct )
 			throw new UnsupportedOperationException('Cannot return the proxy username with a direct connection')
@@ -76,6 +82,7 @@ class EnvProxy {
 		return this.username
 	}
 
+	@Override
 	String password() {
 		if ( this.direct )
 			throw new UnsupportedOperationException('Cannot return the proxy password with a direct connection')
