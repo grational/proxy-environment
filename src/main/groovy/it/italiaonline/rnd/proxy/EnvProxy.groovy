@@ -90,4 +90,16 @@ class EnvProxy implements StructuredProxy {
 			throw new UnsupportedOperationException("Cannot return the proxy password, the proxy string doesn't contain any auth credentials")
 		return this.password
 	}
+
+	@Override
+	String toString() {
+		if ( this.direct )
+			throw new UnsupportedOperationException('Cannot return the proxy string representation with a direct connection')
+		String result = "${this.protocol}://"
+		if ( this.auth() ) result += "${this.username}:${this.password}@"
+		result += this.host
+		if ( this.port ) result += ":${this.port}"
+
+		return result
+	}
 }

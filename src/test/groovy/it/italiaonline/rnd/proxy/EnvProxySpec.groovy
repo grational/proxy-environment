@@ -69,6 +69,12 @@ class EnvProxySpec extends Specification {
 			exception = thrown(UnsupportedOperationException)
 			exception.message == 'Cannot return the proxy password with a direct connection'
 
+		when:
+			envProxy.toString()
+		then:
+			exception = thrown(UnsupportedOperationException)
+			exception.message == 'Cannot return the proxy string representation with a direct connection'
+
 	}
 
 	@Unroll
@@ -84,30 +90,25 @@ class EnvProxySpec extends Specification {
 		when:
 			def envProxy = new EnvProxy(requestProtocol.proxy())
 		then:
-			envProxy.type()   == expectedType
-			envProxy.host()   == expectedHost
-			envProxy.port()   == expectedPort
-			envProxy.secure() == expectedSecureFlag
-			envProxy.auth()   == expectedAuthFlag
+			envProxy.type()     == expectedType
+			envProxy.host()     == expectedHost
+			envProxy.port()     == expectedPort
+			envProxy.secure()   == expectedSecureFlag
+			envProxy.auth()     == expectedAuthFlag
+			envProxy.toString() == expectedString
 		where:
-			requestProtocol       || expectedType     | expectedHost           | expectedPort | expectedSecureFlag | expectedAuthFlag
-			RequestProtocol.ALL   || Proxy.Type.HTTP  | 'proxy-all.pgol.net'   | 1010         | true               | false
-			RequestProtocol.FTP   || Proxy.Type.SOCKS | 'proxy-ftp.pgol.net'   | 2020         | false              | false
-			RequestProtocol.HTTP  || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030         | false              | false
-			RequestProtocol.HTTPS || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | false
-			RequestProtocol.RSYNC || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | false
+			requestProtocol       | proxyType     | proxyString                          || expectedType     | expectedHost           | expectedPort | expectedSecureFlag | expectedAuthFlag | expectedString
+			RequestProtocol.ALL   | 'all_proxy'   | 'https://proxy-all.pgol.net:1010'    || Proxy.Type.HTTP  | 'proxy-all.pgol.net'   | 1010         | true               | false            | proxyString
+			RequestProtocol.FTP   | 'ftp_proxy'   | 'socks4://proxy-ftp.pgol.net:2020'   || Proxy.Type.SOCKS | 'proxy-ftp.pgol.net'   | 2020         | false              | false            | proxyString
+			RequestProtocol.HTTP  | 'http_proxy'  | 'http://proxy-http.pgol.net:3030'    || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030         | false              | false            | proxyString
+			RequestProtocol.HTTPS | 'https_proxy' | 'socks5://proxy-https.pgol.net:4040' || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | false            | proxyString
+			RequestProtocol.RSYNC | 'rsync_proxy' | 'https://proxy-rsync.pgol.net:5050'  || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | false            | proxyString
 	}
 
 	@Unroll
 	def "Should correctly handle an authenticated proxy for the request protocol #requestProtocol"() {
 		setup:
-			new Environment (
-				all_proxy:   'https://user_all:pass_all@proxy-all.pgol.net:1010',
-				ftp_proxy:   'socks4://user_ftp:pass_ftp@proxy-ftp.pgol.net:2020',
-				http_proxy:  'http://user_http:pass_http@proxy-http.pgol.net:3030',
-				https_proxy: 'socks5://user_https:pass_https@proxy-https.pgol.net:4040',
-				rsync_proxy: 'https://user_rsync:pass_rsync@proxy-rsync.pgol.net:5050'
-			).insert()
+			new Environment((proxyType): proxyString).insert()
 		when:
 			def envProxy = new EnvProxy(requestProtocol.proxy())
 		then:
@@ -118,12 +119,13 @@ class EnvProxySpec extends Specification {
 			envProxy.auth()     == expectedAuthFlag
 			envProxy.username() == expectedUsername
 			envProxy.password() == expectedPassword
+			envProxy.toString() == expectedString
 		where:
-			requestProtocol       || expectedType     | expectedHost           | expectedPort | expectedSecureFlag | expectedAuthFlag | expectedUsername | expectedPassword
-			RequestProtocol.ALL   || Proxy.Type.HTTP  | 'proxy-all.pgol.net'   | 1010         | true               | true             | 'user_all'       | 'pass_all'
-			RequestProtocol.FTP   || Proxy.Type.SOCKS | 'proxy-ftp.pgol.net'   | 2020         | false              | true             | 'user_ftp'       | 'pass_ftp'
-			RequestProtocol.HTTP  || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030         | false              | true             | 'user_http'      | 'pass_http'
-			RequestProtocol.HTTPS || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | true             | 'user_https'     | 'pass_https'
-			RequestProtocol.RSYNC || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | true             | 'user_rsync'     | 'pass_rsync'
+			requestProtocol       | proxyType     | proxyString                                                || expectedType     | expectedHost           | expectedPort | expectedSecureFlag | expectedAuthFlag | expectedUsername | expectedPassword | expectedString
+			RequestProtocol.ALL   | 'all_proxy'   | 'https://user_all:pass_all@proxy-all.pgol.net:1010'        || Proxy.Type.HTTP  | 'proxy-all.pgol.net'   | 1010         | true               | true             | 'user_all'       | 'pass_all'       | proxyString
+			RequestProtocol.FTP   | 'ftp_proxy'   | 'socks4://user_ftp:pass_ftp@proxy-ftp.pgol.net:2020'       || Proxy.Type.SOCKS | 'proxy-ftp.pgol.net'   | 2020         | false              | true             | 'user_ftp'       | 'pass_ftp'       | proxyString
+			RequestProtocol.HTTP  | 'http_proxy'  | 'http://user_http:pass_http@proxy-http.pgol.net:3030'      || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030         | false              | true             | 'user_http'      | 'pass_http'      | proxyString
+			RequestProtocol.HTTPS | 'https_proxy' | 'socks5://user_https:pass_https@proxy-https.pgol.net:4040' || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | true             | 'user_https'     | 'pass_https'     | proxyString
+			RequestProtocol.RSYNC | 'rsync_proxy' | 'https://user_rsync:pass_rsync@proxy-rsync.pgol.net:5050'  || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | true             | 'user_rsync'     | 'pass_rsync'     | proxyString
 	}
 }
