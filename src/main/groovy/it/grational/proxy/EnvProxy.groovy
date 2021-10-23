@@ -1,7 +1,6 @@
-package it.italiaonline.rnd.proxy
+package it.grational.proxy
 
 import java.net.Proxy
-import java.util.regex.Pattern
 import java.util.regex.Matcher
 
 /**
@@ -32,6 +31,22 @@ class EnvProxy implements StructuredProxy {
 			this.host     = m.group(4)
 			this.port     = m.group(5) as Integer
 		}
+	}
+
+	@Override
+	Proxy proxy() {
+		Proxy proxy
+		if ( this.direct )
+			proxy = Proxy.NO_PROXY
+		else
+			proxy = new Proxy (
+				this.type(),
+				new InetSocketAddress (
+					this.host,
+					this.port
+				)
+			)
+		return proxy
 	}
 
 	@Override

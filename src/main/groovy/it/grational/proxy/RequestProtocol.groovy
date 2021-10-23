@@ -1,4 +1,4 @@
-package it.italiaonline.rnd.proxy
+package it.grational.proxy
 
 enum RequestProtocol {
 	ALL   { @Override String proxy() { System.getenv().get('all_proxy')   } },

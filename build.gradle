@@ -8,33 +8,36 @@
 plugins {
 	// support for groovy
 	id 'groovy'
-	// autogenerate eclipse project files
-	id 'eclipse'
-	// create an html index linking every report generated
-	id 'build-dashboard'
-	// view of the project (jars used, navigable source tree)
-	id 'project-report'
+	// required by jitpack
+	id 'maven-publish'
 	// groovy code linter
 	id 'codenarc'
 	// test code coverage plugin
 	id 'net.saliman.cobertura' version '4.0.0'
 	// awesome git tag / gradle version integration
-	id 'pl.allegro.tech.build.axion-release' version '1.12.1'
+	id 'pl.allegro.tech.build.axion-release' version '1.13.5'
 }
 
 // [general] configuration
 project.ext {
-	groovyVersion       = '2.5.13'
-	spockVersion        = '1.3-groovy-2.5'
-	codenarcVersion     = '2.0.0'
-	slf4jVersion        = '1.7.30'
+	groovyVersion      = '3.0.9'
+	spockVersion       = '2.0-groovy-3.0'
+	codenarcVersion    = '2.2.0'
+	slf4jVersion       = '1.7.32'
+	specSupportVersion = 'release-0.1.4'
+}
+
+scmVersion {
+	tag {
+		prefix = 'release-'
+	}
 }
 
 project.with {
 	//project.name is set in the settings.gradle with rootProject.name
-	group                 "it.italiaonline.rnd"
-	version               scmVersion.version // (remove -SNAPSHOT for releases)
-	description           "A 'gigawatt' powered project."
+	group       'it.grational'
+	version     scmVersion.version // (remove -SNAPSHOT for releases)
+	description 'Transcode proxy information from environment into objects'
 }
 // [crosscompile] source and target java version
 allprojects {
@@ -58,8 +61,26 @@ dependencies {
 	// We use the awesome Spock testing and specification framework
 	testImplementation (
 		"org.spockframework:spock-core:$spockVersion",
-		'com.github.grational:specification-support:release-0.1.1'
+		"com.github.grational:specification-support:$specSupportVersion"
 	)
+}
+
+// [tasks] configuration //
+tasks.withType(Test) {
+	useJUnitPlatform()
+	maxParallelForks = Runtime.runtime.availableProcessors() / 2
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			groupId = 'com.github.grational'
+			artifactId = 'proxy-environment'
+			version = scmVersion.version // '0.5.0' (remove -SNAPSHOT for releases)
+
+			from components.java
+		}
+	}
 }
 
 // codenarc groovy source analyses
@@ -83,8 +104,6 @@ codenarc{
 	}
 }
 
-
-
 // [tasks] configuration //
 jar {
 	// execute check task when create the jar
@@ -97,13 +116,6 @@ check {
 }
 
 // [tasks] definition
-task listJars {
-	description = 'print out the jars used by the project'
-	doLast {
-		configurations.compile.each { File file -> println file.name }
-	}
-}
-
 tasks.withType(Test) {
 	maxParallelForks = Runtime.runtime.availableProcessors() / 2
 }
