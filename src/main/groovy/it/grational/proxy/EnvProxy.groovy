@@ -36,9 +36,9 @@ class EnvProxy implements StructuredProxy {
 	@Override
 	Proxy proxy() {
 		Proxy proxy
-		if ( this.direct )
+		if ( this.direct ) {
 			proxy = Proxy.NO_PROXY
-		else
+		} else {
 			proxy = new Proxy (
 				this.type(),
 				new InetSocketAddress (
@@ -46,7 +46,25 @@ class EnvProxy implements StructuredProxy {
 					this.port
 				)
 			)
+			if ( this.auth() )
+				this.enableAuthentication(this.username, this.password)
+		}
 		return proxy
+	}
+
+	private void enableAuthentication(String username, String password) {
+		// enable proxy basic auth for https - needed after j8
+		// otherwise you will obtain a 417 http error
+		System.properties << [
+			'jdk.http.auth.tunneling.disabledSchemes': ''
+		]
+		// set the jdk net class that handles proxy basic authentication
+		Authenticator.default = {
+			new PasswordAuthentication (
+				username,
+				password as char[]
+			)
+		} as Authenticator
 	}
 
 	@Override

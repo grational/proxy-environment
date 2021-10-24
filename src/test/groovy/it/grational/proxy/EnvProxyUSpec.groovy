@@ -130,4 +130,27 @@ class EnvProxyUSpec extends Specification {
 			EnvVar.HTTPS | 'https_proxy' | 'socks5://user_https:pass_https@proxy-https.pgol.net:4040' || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | true             | 'user_https'     | 'pass_https'     | proxyString
 			EnvVar.RSYNC | 'rsync_proxy' | 'https://user_rsync:pass_rsync@proxy-rsync.pgol.net:5050'  || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | true             | 'user_rsync'     | 'pass_rsync'     | proxyString
 	}
+
+	def "Should enable proxy authentication when credentials are binded to the proxy string"() {
+		setup:
+			new Environment (
+				http_proxy: 'http://username:password@proxy.host.it:8080'
+			).insert()
+		and:
+			URL destination = 'http://www.polito.it'.toURL()
+
+		when:
+			def envProxy = new EnvProxy (
+				EnvVar.byURL(destination).value()
+			)
+		then:
+			System.getProperty('jdk.http.auth.tunneling.disabledSchemes') != ''
+
+		when:
+			def proxy = envProxy.proxy()
+		then:
+			proxy == new Proxy(Proxy.Type.HTTP,new InetSocketAddress('proxy.host.it',8080))
+		and:
+			System.getProperty('jdk.http.auth.tunneling.disabledSchemes') == ''
+	}
 }
