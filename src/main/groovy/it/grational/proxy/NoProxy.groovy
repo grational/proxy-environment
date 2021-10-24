@@ -4,7 +4,7 @@ class NoProxy implements ExclusionList {
 	private final List list
 
 	NoProxy() {
-		this.list = System.getenv().get('no_proxy').split(',')
+		this.list = System.getenv().get('no_proxy')?.split(',') ?: []
 	}
 
 	@Override
