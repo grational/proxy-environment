@@ -129,6 +129,8 @@ class EnvProxyUSpec extends Specification {
 			EnvVar.HTTP  | 'http_proxy'  | 'http://user_http:pass_http@proxy-http.pgol.net:3030'      || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 3030         | false              | true             | 'user_http'      | 'pass_http'      | proxyString
 			EnvVar.HTTPS | 'https_proxy' | 'socks5://user_https:pass_https@proxy-https.pgol.net:4040' || Proxy.Type.SOCKS | 'proxy-https.pgol.net' | 4040         | false              | true             | 'user_https'     | 'pass_https'     | proxyString
 			EnvVar.RSYNC | 'rsync_proxy' | 'https://user_rsync:pass_rsync@proxy-rsync.pgol.net:5050'  || Proxy.Type.HTTP  | 'proxy-rsync.pgol.net' | 5050         | true               | true             | 'user_rsync'     | 'pass_rsync'     | proxyString
+		// password with '@' characters inside
+			EnvVar.HTTP  | 'http_proxy'  | 'http://user_http:@p@ss@http@@proxy-http.pgol.net:5151'    || Proxy.Type.HTTP  | 'proxy-http.pgol.net'  | 5151         | false              | true             | 'user_http'     | '@p@ss@http@'     | proxyString
 	}
 
 	def "Should enable proxy authentication when credentials are binded to the proxy string"() {

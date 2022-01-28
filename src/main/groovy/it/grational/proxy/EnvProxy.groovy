@@ -10,7 +10,7 @@ import java.util.regex.Matcher
  */
 class EnvProxy implements StructuredProxy {
 	private final String  proxyPattern =
-		$/(https?|socks[45])://(?:([^:]+):([^@]+)@)?([^:]+):([1-9][0-9]{0,4})/$
+		$/(https?|socks[45])://(?:([^:]+):((?:[^@]*@?)+)@)?([^@:]+):([1-9][0-9]{0,4})/$
 	private final Boolean direct
 	private final String  protocol
 	private final String  username
