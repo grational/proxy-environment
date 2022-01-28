@@ -1,4 +1,4 @@
-package it.grational.http.proxy
+package it.grational.proxy
 
 class HttpAuthProxy extends HttpProxy {
 	

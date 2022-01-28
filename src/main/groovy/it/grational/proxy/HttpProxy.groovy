@@ -1,4 +1,4 @@
-package it.grational.http.proxy
+package it.grational.proxy
 
 class HttpProxy extends Proxy {
 	
