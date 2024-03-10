@@ -10,21 +10,8 @@ plugins {
 	id 'groovy'
 	// required by jitpack
 	id 'maven-publish'
-	// groovy code linter
-	id 'codenarc'
-	// test code coverage plugin
-	id 'net.saliman.cobertura' version '4.0.0'
 	// awesome git tag / gradle version integration
-	id 'pl.allegro.tech.build.axion-release' version '1.13.5'
-}
-
-// [general] configuration
-project.ext {
-	groovyVersion      = '3.0.9'
-	spockVersion       = '2.0-groovy-3.0'
-	codenarcVersion    = '2.2.0'
-	slf4jVersion       = '1.7.32'
-	specSupportVersion = 'release-0.1.4'
+	id 'pl.allegro.tech.build.axion-release' version '1.14.5'
 }
 
 scmVersion {
@@ -39,15 +26,9 @@ project.with {
 	version     scmVersion.version // (remove -SNAPSHOT for releases)
 	description 'Transcode proxy information from environment into objects'
 }
-// [crosscompile] source and target java version
-allprojects {
-	sourceCompatibility = '1.8'
-	targetCompatibility = sourceCompatibility
-}
 
 repositories {
-	jcenter()
-
+	mavenCentral()
 	// leverage github as a maven repository
 	maven { url 'https://jitpack.io' }
 }
@@ -55,13 +36,13 @@ repositories {
 dependencies {
 	// Groovy language support
 	implementation (
-		"org.codehaus.groovy:groovy:$groovyVersion",
+		"org.codehaus.groovy:groovy:3.0.21",
 	)
 
 	// We use the awesome Spock testing and specification framework
 	testImplementation (
-		"org.spockframework:spock-core:$spockVersion",
-		"com.github.grational:specification-support:$specSupportVersion"
+		"org.spockframework:spock-core:2.3-groovy-3.0",
+		"com.github.grational:specification-support:release-0.1.4"
 	)
 }
 
@@ -69,38 +50,19 @@ dependencies {
 tasks.withType(Test) {
 	useJUnitPlatform()
 	maxParallelForks = Runtime.runtime.availableProcessors() / 2
+	jvmArgs('--add-opens=java.base/java.util=ALL-UNNAMED')
 }
 
+// required to work with jitpack.io
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			groupId = 'com.github.grational'
 			artifactId = 'proxy-environment'
-			version = scmVersion.version // '0.5.0' (remove -SNAPSHOT for releases)
+			version = "release-${scmVersion.version}" // '0.5.0' (remove -SNAPSHOT for releases)
 
 			from components.java
 		}
-	}
-}
-
-// codenarc groovy source analyses
-codenarc{
-	toolVersion = "$codenarcVersion"
-
-	codenarcMain {
-		configFile = rootProject.file('config/codenarc/ruleset.groovy')
-		exclude "**/package-info.*"
-		ignoreFailures true       // does not block builds
-		maxPriority1Violations 0
-		maxPriority2Violations 10
-		maxPriority3Violations 20
-	}
-	codenarcTest {
-		configFile = rootProject.file('config/codenarc/ruleset-test.groovy')
-		ignoreFailures true
-		maxPriority1Violations 0
-		maxPriority2Violations 10
-		maxPriority3Violations 20
 	}
 }
 
@@ -108,11 +70,6 @@ codenarc{
 jar {
 	// execute check task when create the jar
 	dependsOn 'check'
-}
-
-check {
-	// create the code coverage report
-	dependsOn 'cobertura'
 }
 
 // [tasks] definition
