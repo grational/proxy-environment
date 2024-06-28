@@ -11,7 +11,7 @@ plugins {
 	// required by jitpack
 	id 'maven-publish'
 	// awesome git tag / gradle version integration
-	id 'pl.allegro.tech.build.axion-release' version '1.14.5'
+	id 'pl.allegro.tech.build.axion-release' version '1.13.14'
 }
 
 scmVersion {
@@ -42,7 +42,7 @@ dependencies {
 	// We use the awesome Spock testing and specification framework
 	testImplementation (
 		"org.spockframework:spock-core:2.3-groovy-3.0",
-		"com.github.grational:specification-support:release-0.1.4"
+		"com.github.grational:specification-support:release-1.1.2"
 	)
 }
 
